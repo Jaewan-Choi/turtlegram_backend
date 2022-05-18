@@ -54,9 +54,9 @@ def sign_up():
         'password': hashed_password
     }
 
-    user = db.users.insert_one(doc)
+    db.users.insert_one(doc)
 
-    return jsonify({'message': 'success2'})
+    return jsonify({'message': 'success'})
 
 
 @app.route("/login", methods=["POST"])
