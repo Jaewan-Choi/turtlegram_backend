@@ -14,7 +14,8 @@ SECRET_KEY = 'turtle'
 
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"*": {"origins": "*"}})
+cors = CORS(app, resources={
+            r'*': {'origins': ['http://127.0.0.1:5000', 'http://127.0.0.1:5500']}})
 client = MongoClient('localhost', 27017)
 db = client.turtlegram
 
