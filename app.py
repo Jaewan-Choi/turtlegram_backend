@@ -7,7 +7,6 @@ from flask import Flask, abort, jsonify, request, Response
 from flask_cors import CORS
 import jwt
 from pymongo import MongoClient
-# from bson.json_util import loads, dumps
 
 
 SECRET_KEY = 'turtle'
@@ -122,6 +121,14 @@ def get_article():
     for article in articles:
         article["_id"] = str(article["_id"])
     return jsonify({"message": "success", "articles": articles})
+
+
+@app.route("/article/<article_id>", methods=["GET"])
+def get_article_detail(article_id):
+    article = db.article.find_one({"_id":ObjectId(article_id)})
+    article["_id"] = str(article["_id"])
+
+    return jsonify({"message": "success", "article": article})
 
 
 if __name__ == '__main__':
