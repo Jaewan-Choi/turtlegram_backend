@@ -21,7 +21,7 @@ db = client.turtlegram
 
 def authorize(f):
     @wraps(f)
-    def decorated_function():
+    def decorated_function(*args, **kwargs):
         if not 'Authorization' in request.headers:
             abort(401)
         token = request.headers['Authorization']
@@ -29,7 +29,7 @@ def authorize(f):
             user = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
         except:
             abort(401)
-        return f(user)
+        return f(user, *args, **kwargs)
     return decorated_function
 
 
@@ -91,7 +91,7 @@ def get_user_info(user):
         '_id': ObjectId(user["id"])
     })
 
-    return jsonify({"message": "success", "email": result["email"]})
+    return jsonify({"message": "success", "email": result["email"], "id": user["id"]})
 
 
 @app.route("/article", methods=["POST"])
@@ -126,9 +126,44 @@ def get_article():
 @app.route("/article/<article_id>", methods=["GET"])
 def get_article_detail(article_id):
     article = db.article.find_one({"_id":ObjectId(article_id)})
-    article["_id"] = str(article["_id"])
+    if article:
+        article["_id"] = str(article["_id"])
+        return jsonify({"message": "success", "article": article})
+    else:
+        return jsonify({"message": "fail"}), 404
 
-    return jsonify({"message": "success", "article": article})
+
+@app.route("/article/<article_id>", methods=["PATCH"])
+@authorize
+def patch_article_detail(user, article_id):
+
+    data = json.loads(request.data)
+    title = data.get("title")
+    content = data.get("content")
+    article = db.article.update_one({"_id": ObjectId(article_id), "user": user["id"]}, {
+        "$set": {"title": title, "content": content}
+    })
+    print(article.matched_count)  # matched_count : 1 = 업데이트 성공 / 0 : 실패
+
+    if article.matched_count:
+        return jsonify({"message": "success"})
+    else:
+        return jsonify({"message": "fail"}), 403
+
+
+@app.route("/article/<article_id>", methods=["DELETE"])
+@authorize
+def delete_article_detail(user, article_id):
+    print('start')
+
+    article = db.article.delete_one(
+        {"_id": ObjectId(article_id), "user": user["id"]})
+
+    if article.deleted_count:
+        return jsonify({"message": "success"})
+    else:
+        print('test')
+        return jsonify({"message": "fail"}), 403
 
 
 if __name__ == '__main__':
